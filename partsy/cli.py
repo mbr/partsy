@@ -8,14 +8,35 @@ import click
 from .database import Database
 
 
+class PartyError(Exception):
+    pass
+
+
+class MissingOrderNo(PartyError):
+    pass
+
+
 class KiCadHandler(object):
     def handle_row(self, row):
         i = Item(designator=row[1],
                  footprint=row[2],
-                 qty=row[3],
+                 qty=int(row[3]),
                  symbol=row[4], )
 
         return i
+
+
+class FarnellHandler(object):
+    def __init__(self, outstream):
+        self.writer = csv.writer(outstream)
+        self.writer.writerow(('Part Number', 'Quantity'))
+
+    def output_article(self, item, article):
+        if 'farnell' not in article.vendors:
+            raise MissingOrderNo('Article {} has no Farnell Order#'.format(
+                item))
+
+        self.writer.writerow((article.vendors['farnell'], item.props['qty']))
 
 
 class Item(object):
@@ -49,24 +70,34 @@ def cli():
               type=click.Choice(['auto', 'kicad']),
               default='auto',
               help='Input format.')
+@click.option('--output',
+              '-o',
+              type=click.File(mode='w'),
+              default=sys.stdout,
+              help='Output file (default: stdout)')
+@click.option('--output-format',
+              '-O',
+              type=click.Choice(['auto', 'farnell']),
+              default='farnell',
+              help='Output format.')
 @click.option('--db',
               '-D',
               'db_file',
               type=click.Path(readable=True),
               default='partsy.yaml',
               help='Parts database file')
-def test(input, input_format, db_file):
+@click.option('--qty', '-q', type=int, default=1, help='Quantity')
+def test(input, input_format, output, output_format, db_file, qty):
     # read database
     with open(db_file) as db_inp:
         db = Database.load(db_inp)
-
-    print(db)
 
     inp = csv.reader(input)
 
     rows = iter(inp)
     header = next(rows)
 
+    # determine input format
     if input_format == 'auto':
         if header[:6] == ['Id', 'Designator', 'Package', 'Quantity',
                           'Designation', 'Supplier and ref']:
@@ -77,16 +108,44 @@ def test(input, input_format, db_file):
     if input_format == 'kicad':
         handler_in = KiCadHandler()
 
+    # determine output format
+    if output_format == 'auto':
+        output_format = 'farnell'
+
     items = []
     for row in rows:
         items.append(handler_in.handle_row(row))
 
     # collected all items, now look them up in the database
+    unmatched = False
+    paired = []
     for item in items:
         article = db.match(item)
 
         if not article:
-            click.echo('Not matched: {}'.format(item))
+            click.echo('Not matched: {}'.format(item), err=True)
+            unmatched = True
+
+        if article.ignore:
+            continue
+
+        # multiply quantities
+        item.props['qty'] *= qty
+
+        paired.append((item, article))
+
+    if unmatched:
+        exit_err('Has unmatched items')
+
+    # now output
+    if output_format == 'farnell':
+        handler_out = FarnellHandler(output)
+    else:
+        exit_err('Cannot determine output format')
+
+    # print each article
+    for item, article in paired:
+        handler_out.output_article(item, article)
 
 
 if __name__ == '__main__':
