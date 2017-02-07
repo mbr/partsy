@@ -82,7 +82,7 @@ def exit_err(msg):
     sys.exit(1)
 
 
-@click.group(help='PartY: Lookup order numbers for parts')
+@click.group(help='partsy: Lookup order numbers for parts')
 def cli():
     pass
 
@@ -103,7 +103,7 @@ def cli():
               '-D',
               'db_file',
               type=click.Path(readable=True),
-              default='party.yaml',
+              default='partsy.yaml',
               help='Parts database file')
 def test(input, input_format, db_file):
     # read database
