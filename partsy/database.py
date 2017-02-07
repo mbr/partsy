@@ -10,7 +10,8 @@ ARTICLE = Schema({Required('name'): str,
                   'manufacturer': str,
                   'mpart_no': str,
                   'ignore': bool,
-                  'matches': [RULE], })
+                  'matches': [RULE],
+                  'vendor': {str: str}})
 
 ARTICLES = Schema([ARTICLE])
 
@@ -42,6 +43,7 @@ class Article(object):
         self.name = raw['name']
         self.ignore = raw.get('ignore', False)
         self.rules = [Rule.from_raw(m) for m in raw['matches']]
+        self.vendors = raw.get('vendor', {})
 
     def match(self, item):
         # in any rule matches, the article can fill the required item
