@@ -43,46 +43,6 @@ class Article(object):
 
 
 class Db(object):
-    # @classmethod
-    # def load(cls, src):
-    #     articles = []
-
-    #     for idx, line in enumerate(iter(src)):
-    #         if not line.strip():
-    #             continue
-
-    #         if line.lstrip().startswith('#'):
-    #             continue
-
-    #         if not line.endswith('\n'):
-    #             raise DbError(idx, 'missing newline at EOF')
-
-    #         if len(line) < 3:
-    #             raise DbError(idx, 'line too short')
-
-    #         cmd, space, rem = line[0], line[1], line[2:]
-
-    #         if space != ' ':
-    #             raise DbError(idx, 'expected single command follow by space')
-
-    #         if cmd != 'A' and not articles:
-    #             raise DbError(idx, 'first command must be article command')
-
-    #         if cmd == 'A':
-    #             articles.append(Article(rem))
-    #         elif cmd == 'F':
-    #             articles[-1].footprint = rem
-    #         elif cmd == 'S':
-    #             articles[-1].symbol = rem
-    #         else:
-    #             raise DbError(idx, 'unknown command: {}'.format(cmd))
-
-    #         obj = cls()
-
-    #         obj.articles = articles
-
-    #         return obj
-
     def __init__(self, articles):
         self.articles = articles
 
