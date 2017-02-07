@@ -6,3 +6,9 @@ partsy
 This program should be considered a draft. It's working (and being used), but no guarantees are made that it will stay the way it is.
 
 If you find it useful, please let me know; maybe we can extend it together.
+
+
+Database format
+---------------
+
+Still not documented. I'm sorry.
