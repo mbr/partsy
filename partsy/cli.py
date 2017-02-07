@@ -5,57 +5,8 @@ import re
 import sys
 
 import click
-import yaml
 
-
-class DbError(Exception):
-    def __init__(self, line_no, msg):
-        exc_msg = 'db line {}: {}'.format(line_no, msg)
-        super(DbError, self).__init__(exc_msg)
-        self.line_no = line_no
-
-
-class Article(object):
-    @property
-    def footprint_re(self):
-        if not self.footprint:
-            return None
-
-        regex = getattr(self, 'footprint_re', None)
-
-        if not regex:
-            regex = re.compile(self.footprint)
-            self.footprint_re = regex
-
-        return regex
-
-    def __init__(self, name):
-        self.name = name
-
-    def match(self, item):
-        regexps = []
-
-        if self.footprint_re:
-            regexps.append()
-            self.footprint_re
-
-        return False
-
-
-class Db(object):
-    def __init__(self, articles):
-        self.articles = articles
-
-    @classmethod
-    def load(cls, src):
-        articles = yaml.load(src)
-        db = cls(articles)
-        return db
-
-    def match(self, item):
-        for article in self.articles:
-            if article.match(item):
-                return article
+from .database import Database
 
 
 class KiCadHandler(object):
@@ -108,7 +59,7 @@ def cli():
 def test(input, input_format, db_file):
     # read database
     with open(db_file) as db_inp:
-        db = Db.load(db_inp)
+        db = Database.load(db_inp)
 
     print(db)
 
