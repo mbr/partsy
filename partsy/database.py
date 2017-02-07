@@ -6,7 +6,11 @@ import yaml
 
 RULE = Schema({'footprint': str, 'symbol': str})
 
-ARTICLE = Schema({Required('name'): str, 'matches': [RULE]})
+ARTICLE = Schema({Required('name'): str,
+                  'manufacturer': str,
+                  'mpart_no': str,
+                  'ignore': bool,
+                  'matches': [RULE], })
 
 ARTICLES = Schema([ARTICLE])
 
@@ -29,14 +33,14 @@ class Rule(object):
 
     @classmethod
     def from_raw(cls, condition_strings):
-        return cls({field: re.compile(regex)
+        return cls({field: re.compile(regex + '$')
                     for field, regex in condition_strings.items()})
 
 
 class Article(object):
     def __init__(self, raw):
         self.name = raw['name']
-
+        self.ignore = raw.get('ignore', False)
         self.rules = [Rule.from_raw(m) for m in raw['matches']]
 
     def match(self, item):
