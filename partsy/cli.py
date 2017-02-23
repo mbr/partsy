@@ -6,6 +6,7 @@ import click
 
 from .database import Database
 from .readers import READERS
+from .vendors import VENDORS
 from .writers import FarnellWriter
 
 
@@ -103,6 +104,13 @@ def lookup(input, input_format, output, output_format, db_file, qty):
     # print each article
     for item, article in paired:
         writer.output_article(item, article)
+
+
+@cli.command('vendor')
+@click.argument('vendor')
+@click.argument('order_no')
+def lookup_vendor_item(vendor, order_no):
+    click.echo(VENDORS[vendor].retrieve_item(order_no))
 
 
 if __name__ == '__main__':

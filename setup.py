@@ -20,7 +20,7 @@ setup(name='partsy',
       url='https://github.com/mbr/partsy',
       license='MIT',
       packages=find_packages(exclude=['tests']),
-      install_requires=['click', 'pyyaml', 'voluptuous'],
+      install_requires=['click', 'pyyaml', 'voluptuous', 'requests'],
       entry_points={
           'console_scripts': [
               'partsy = partsy.cli:cli',
