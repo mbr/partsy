@@ -1,12 +1,11 @@
 #!/usr/bin/python3
 
-import csv
 import sys
 
 import click
 
 from .database import Database
-from .readers import KiCadReader
+from .readers import READERS
 from .writers import FarnellWriter
 
 
@@ -29,7 +28,7 @@ def cli():
               help='Input file (default: stdin)')
 @click.option('--input-format',
               '-I',
-              type=click.Choice(['auto', 'kicad']),
+              type=click.Choice(['auto'] + list(sorted(READERS.keys()))),
               default='auto',
               help='Input format.')
 @click.option('--output',
@@ -54,34 +53,30 @@ def lookup(input, input_format, output, output_format, db_file, qty):
     with open(db_file) as db_inp:
         db = Database.load(db_inp)
 
-    inp = csv.reader(input)
+    buffered = input.read()
 
-    rows = iter(inp)
-    header = next(rows)
-
-    # determine input format
     if input_format == 'auto':
-        if header[:6] == ['Id', 'Designator', 'Package', 'Quantity',
-                          'Designation', 'Supplier and ref']:
-            input_format = 'kicad'
-        else:
-            exit_err('Cannot determine input format')
+        for cand in READERS.values():
+            reader = cand.try_handle(buffered)
+            if reader:
+                break
 
-    if input_format == 'kicad':
-        reader = KiCadReader()
+        if not reader:
+            exit_err('Cannot determine input format')
+    else:
+        reader = READERS[input_format].try_handle(buffered)
+        if not reader:
+            exit_err('Input data not valid for input format {}'.format(
+                input_format))
 
     # determine output format
     if output_format == 'auto':
         output_format = 'farnell'
 
-    items = []
-    for row in rows:
-        items.append(reader.handle_row(row))
-
     # collected all items, now look them up in the database
     unmatched = False
     paired = []
-    for item in items:
+    for item in reader.iter_items():
         article = db.match(item)
 
         if not article:
