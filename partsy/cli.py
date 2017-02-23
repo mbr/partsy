@@ -16,7 +16,7 @@ class MissingOrderNo(PartyError):
     pass
 
 
-class KiCadHandler(object):
+class KiCadReader(object):
     def handle_row(self, row):
         i = Item(designator=row[1],
                  footprint=row[2],
@@ -26,7 +26,7 @@ class KiCadHandler(object):
         return i
 
 
-class FarnellHandler(object):
+class FarnellWriter(object):
     def __init__(self, outstream):
         self.writer = csv.writer(outstream)
         self.writer.writerow(('Part Number', 'Quantity'))
@@ -106,7 +106,7 @@ def test(input, input_format, output, output_format, db_file, qty):
             exit_err('Cannot determine input format')
 
     if input_format == 'kicad':
-        handler_in = KiCadHandler()
+        reader = KiCadReader()
 
     # determine output format
     if output_format == 'auto':
@@ -114,7 +114,7 @@ def test(input, input_format, output, output_format, db_file, qty):
 
     items = []
     for row in rows:
-        items.append(handler_in.handle_row(row))
+        items.append(reader.handle_row(row))
 
     # collected all items, now look them up in the database
     unmatched = False
@@ -139,13 +139,13 @@ def test(input, input_format, output, output_format, db_file, qty):
 
     # now output
     if output_format == 'farnell':
-        handler_out = FarnellHandler(output)
+        writer = FarnellWriter(output)
     else:
         exit_err('Cannot determine output format')
 
     # print each article
     for item, article in paired:
-        handler_out.output_article(item, article)
+        writer.output_article(item, article)
 
 
 if __name__ == '__main__':
