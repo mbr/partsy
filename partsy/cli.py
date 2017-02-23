@@ -6,46 +6,8 @@ import sys
 import click
 
 from .database import Database
-
-
-class PartyError(Exception):
-    pass
-
-
-class MissingOrderNo(PartyError):
-    pass
-
-
-class KiCadReader(object):
-    def handle_row(self, row):
-        i = Item(designator=row[1],
-                 footprint=row[2],
-                 qty=int(row[3]),
-                 symbol=row[4], )
-
-        return i
-
-
-class FarnellWriter(object):
-    def __init__(self, outstream):
-        self.writer = csv.writer(outstream)
-        self.writer.writerow(('Part Number', 'Quantity'))
-
-    def output_article(self, item, article):
-        if 'farnell' not in article.vendors:
-            raise MissingOrderNo('Article {} has no Farnell Order#'.format(
-                item))
-
-        self.writer.writerow((article.vendors['farnell'], item.props['qty']))
-
-
-class Item(object):
-    def __init__(self, **kwargs):
-        self.props = kwargs
-
-    def __repr__(self):
-        return 'Item({})'.format(', '.join('{}={!r}'.format(*i)
-                                           for i in self.props.items()))
+from .readers import KiCadReader
+from .writers import FarnellWriter
 
 
 def exit_err(msg):
