@@ -49,7 +49,7 @@ def cli():
               default='partsy.yaml',
               help='Parts database file')
 @click.option('--qty', '-q', type=int, default=1, help='Quantity')
-def test(input, input_format, output, output_format, db_file, qty):
+def lookup(input, input_format, output, output_format, db_file, qty):
     # read database
     with open(db_file) as db_inp:
         db = Database.load(db_inp)
