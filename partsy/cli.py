@@ -83,7 +83,7 @@ def lookup(input, input_format, output, output_format, db_file, qty):
             click.echo('Not matched: {}'.format(item), err=True)
             unmatched = True
 
-        if article.ignore:
+        if unmatched or article.ignore:
             continue
 
         # multiply quantities
