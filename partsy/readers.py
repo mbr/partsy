@@ -1,6 +1,13 @@
 import csv
 
 
+class EagleDialect(csv.Dialect):
+    delimiter = ';'
+    quoting = csv.QUOTE_MINIMAL
+    quotechar = '"'
+    lineterminator = '\n'
+
+
 class Reader(object):
     @classmethod
     def try_handle(cls, buf):
@@ -41,4 +48,34 @@ class KiCadReader(Reader):
                        symbol=row[4], )
 
 
-READERS = {'kicad': KiCadReader, }
+class EagleReader(Reader):
+    def __init__(self, row_iter):
+        self.row_iter = row_iter
+
+    @classmethod
+    def try_handle(cls, buf):
+        try:
+            inp = csv.reader(buf.splitlines(), dialect=EagleDialect)
+            rows = iter(inp)
+            header = next(rows)
+            if header[:6] == [
+                    'Qty',
+                    'Value',
+                    'Device',
+                    'Package',
+                    'Parts',
+                    'Description',
+            ]:
+                return cls(rows)
+        except Exception:
+            return None
+
+    def iter_items(self):
+        for row in self.row_iter:
+            yield Item(designator=row[4],
+                       footprint=row[3],
+                       qty=int(row[0]),
+                       symbol=row[1], )
+
+
+READERS = {'kicad': KiCadReader, 'eagle': EagleReader, }
