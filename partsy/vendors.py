@@ -16,7 +16,7 @@ class VendorItem(object):
 
 
 class ReicheltVendor(object):
-    name = 'reichelt'
+    NAME = 'reichelt'
 
     @classmethod
     def retrieve_item(cls, order_no):
@@ -41,7 +41,57 @@ class ReicheltVendor(object):
 
             name = html.unescape(name_span)
 
-            return VendorItem(cls.name, order_no, name)
+            return VendorItem(cls.NAME, order_no, name)
 
 
-VENDORS = {ReicheltVendor.name: ReicheltVendor}
+class FarnellVendor(object):
+
+    NAME = 'farnell'
+
+    API_ENDPOINT = 'http://api.element14.com//catalog/products'
+
+    REGION = 'uk.farnell.com'
+
+    # example key from the docs, because why not?
+    API_KEY = 'gd8n8b2kxqw6jq5mutsbrvur'
+
+    @classmethod
+    def retrieve_item(cls, order_no):
+
+        # import logging
+
+        # logging.basicConfig()
+        # logging.getLogger().setLevel(logging.DEBUG)
+        # requests_log = logging.getLogger("requests.packages.urllib3")
+        # requests_log.setLevel(logging.DEBUG)
+        # requests_log.propagate = True
+
+        params = {
+            'term': 'id:' + order_no,
+            'storeInfo.id': cls.REGION,
+            'resultsSettings.offset': '0',
+            'resultsSettings.numberOfResults': '1',
+            'resultsSettings.refinements.filters': '',
+            'resultsSettings.responseGroup': 'small',
+            'callInfo.omitXmlSchema': 'false',
+            'callInfo.callback': '',
+            'callInfo.responseDataFormat': 'json',
+            'callinfo.apiKey': cls.API_KEY,
+        }
+
+        resp = requests.get(cls.API_ENDPOINT, params=params)
+
+        # while not insane, the farnell api is pretty bad. errors will be
+        # returned on a 200, with a "code" entry in the resulting dict
+        resp.raise_for_status()
+
+        data = resp.json()
+
+        assert 'error' not in data
+
+        prod = data['premierFarnellPartNumberReturn']['products'][0]
+
+        return VendorItem(cls.NAME, order_no, prod['displayName'])
+
+
+VENDORS = {v.NAME: v for v in (ReicheltVendor, FarnellVendor)}
