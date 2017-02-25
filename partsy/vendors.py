@@ -5,16 +5,21 @@ import requests
 
 
 class VendorItem(object):
-    def __init__(self, name, price=None):
+    def __init__(self, vendor, order_no, name, price=None):
+        self.vendor = vendor
+        self.order_no = order_no
         self.name = name
         self.price = price
 
     def __str__(self):
-        return '<{}: {}>'.format(self.__class__.__name__, self.name)
+        return '<{}:{} {!r}>'.format(self.vendor, self.order_no, self.name)
 
 
 class ReicheltVendor(object):
-    def retrieve_item(order_no):
+    name = 'reichelt'
+
+    @classmethod
+    def retrieve_item(cls, order_no):
         # reichelt markup is a grade-A mess. just shoot in the dark for the
         # first thing that looks like an article #
 
@@ -36,7 +41,7 @@ class ReicheltVendor(object):
 
             name = html.unescape(name_span)
 
-            return VendorItem(name)
+            return VendorItem(cls.name, order_no, name)
 
 
-VENDORS = {'reichelt': ReicheltVendor}
+VENDORS = {ReicheltVendor.name: ReicheltVendor}

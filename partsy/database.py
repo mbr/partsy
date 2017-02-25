@@ -52,13 +52,31 @@ class Rule(object):
 
 
 class Article(object):
-    def __init__(self, raw):
-        self.name = raw.get('name')
-        self.manufacturer = raw.get('manufacturer')
-        self.mpart_no = raw.get('mpart_no')
-        self.ignore = raw.get('ignore', None)
-        self.rules = [Rule.from_raw(m) for m in raw['matches']]
-        self.vendors = raw.get('vendor', {})
+    @classmethod
+    def from_db(cls, raw):
+        a = cls()
+
+        a.name = raw.get('name')
+        a.manufacturer = raw.get('manufacturer')
+        a.mpart_no = raw.get('mpart_no')
+        a.ignore = raw.get('ignore', None)
+        a.rules = [Rule.from_raw(m) for m in raw['matches']]
+        a.vendors = raw.get('vendor', {})
+
+        return a
+
+    @classmethod
+    def from_vendor_item(cls, vitem, symbol, footprint):
+        a = cls()
+
+        a.name = vitem.name
+        a.manufacturer = None
+        a.mpart_no = None
+        a.ignore = None
+        a.rules = [Rule.from_raw({'symbol': symbol, 'footprint': footprint, })]
+        a.vendors = {vitem.vendor: vitem.order_no}
+
+        return a
 
     def match(self, item):
         # in any rule matches, the article can fill the required item
@@ -84,10 +102,25 @@ class Article(object):
 
         return od
 
+    def __str__(self):
+        s = '<'
+
+        if self.manufacturer:
+            s += '{}, '.format(self.manufacturer)
+        if self.mpart_no:
+            s += '{}, '.format(self.mpart_no)
+
+        s += '{}>'.format(self.name)
+
+        return s
+
 
 class Database(object):
     def __init__(self, articles):
         self.articles = articles
+
+    def add_article(self, article):
+        self.articles.append(article)
 
     @classmethod
     def load(cls, src):
@@ -97,7 +130,7 @@ class Database(object):
         validated = validate_with_humanized_errors(articles, ARTICLES)
 
         # instantiate
-        rules = [Article(a) for a in validated]
+        rules = [Article.from_db(a) for a in validated]
         return cls(rules)
 
     def dump(self):
