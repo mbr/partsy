@@ -45,11 +45,8 @@ class ReicheltVendor(object):
 
 
 class FarnellVendor(object):
-
     NAME = 'farnell'
-
     API_ENDPOINT = 'http://api.element14.com//catalog/products'
-
     REGION = 'uk.farnell.com'
 
     # example key from the docs, because why not?
